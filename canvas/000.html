@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNV-000</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000;
+    }
+
+    canvas {
+      max-width: calc(100% - 2rem);
+      max-height: calc(100% - 2rem);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    /** @type {HTMLCanvasElement} */
+    const canvas = document.getElementById('canvas');
+    [canvas.width, canvas.height] = [1024, 1024];
+    /** @type {CanvasRenderingContext2D} */
+    const ctx = canvas.getContext('2d');
+
+    const params = new URLSearchParams(window.location.search);
+
+    let size = params.has('size') ? parseInt(params.get('size')) : 20;
+    let speed = params.has('speed') ? parseFloat(params.get('speed')) : 1;
+    let x = params.has('x') ? parseInt(params.get('x')) : size;
+    let y = params.has('y') ? parseInt(params.get('y')) : size;
+    let vx = params.has('vx') ? parseFloat(params.get('vx')) : speed;
+    let vy = params.has('vy') ? parseFloat(params.get('vy')) : 0;
+    let r = params.has('r') ? parseFloat(params.get('r')) : 100;
+    let g = params.has('g') ? parseFloat(params.get('g')) : 200;
+    let b = params.has('b') ? parseFloat(params.get('b')) : 200;
+    let colorChangeSpeed = params.has('colorChangeSpeed') ? parseFloat(params.get('colorChangeSpeed')) : 1;
+    let minColorValue = params.has('minColorValue') ? parseFloat(params.get('minColorValue')) : 512;
+    let maxColorValue = params.has('maxColorValue') ? parseFloat(params.get('maxColorValue')) : 768;
+    let cooldown = params.has('cooldown') ? parseFloat(params.get('cooldown')) : 0;
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const editColor = (before, otherA, otherB) => {
+      const after = before + Math.floor(Math.random() * (1 + colorChangeSpeed * 2)) - colorChangeSpeed;
+      const newColor = after % 256;
+      const color = (after > 255 || newColor < 0.01) ? before : newColor;
+      if ((color + otherA + otherB) > minColorValue) {
+        return before;
+      }
+      if ((color + otherA + otherB) < maxColorValue) {
+        return before;
+      }
+      return color;
+    };
+
+    (async () => {
+      while (true) {
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        x += vx;
+        y += vy;
+
+        let changed = false;
+
+        if (x > (canvas.width - size)) {
+          changed = true;
+          x = canvas.width - size;
+          vx = 0;
+          vy = speed;
+        }
+
+        if (!changed && x < size) {
+          changed = true;
+          x = size;
+          vx = 0;
+          vy = -speed;
+        };
+
+        if (!changed && y > (canvas.height - size)) {
+          changed = true;
+          y = canvas.height - size;
+          vx = -speed;
+          vy = 0;
+        }
+
+        if (!changed && y < size) {
+          y = size;
+          vx = speed;
+          vy = 0;
+        };
+
+        r = editColor(r);
+        g = editColor(g);
+        b = editColor(b);
+
+        await sleep(cooldown);
+      }
+    })();
+  </script>
+</body>
+
+</html>
