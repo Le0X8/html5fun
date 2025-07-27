@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CLK-100</title>
+    <style>
+      :root {
+        --bg: #111;
+        --fg: #aaa;
+        --border: #555;
+        --digit: #0000;
+      }
+
+      html {
+        background-color: var(--bg);
+        color: var(--fg);
+        font-family: 'Cascadia Code', monospace;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #time {
+        font-size: 8rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        width: 100%;
+        height: fit-content;
+      }
+
+      #time div {
+        width: 16rem;
+        height: 10rem;
+        text-align: center;
+        line-height: 10rem;
+        display: flex;
+      }
+
+      #time div > span {
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: center;
+        width: 200%;
+        height: 100%;
+        overflow: hidden;
+        scroll-behavior: smooth;
+        gap: 1rem;
+      }
+
+      #time div > span > span {
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        width: calc(100% - 1rem - 2px);
+        height: calc(100% - 2px);
+        background-color: var(--digit);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frame">
+      <div id="time">
+        <div id="time-1">
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>0</span>
+          </span>
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>3</span>
+            <span>0</span>
+          </span>
+        </div>
+        <div id="time-2">
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>0</span>
+          </span>
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>0</span>
+          </span>
+        </div>
+        <div id="time-3">
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>0</span>
+          </span>
+          <span>
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>0</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('bg'))
+        document.documentElement.style.setProperty(
+          '--bg',
+          '#' + params.get('bg')
+        );
+      if (params.has('fg'))
+        document.documentElement.style.setProperty(
+          '--fg',
+          '#' + params.get('fg')
+        );
+      if (params.has('border'))
+        document.documentElement.style.setProperty(
+          '--border',
+          '#' + params.get('border')
+        );
+      if (params.has('digit'))
+        document.documentElement.style.setProperty(
+          '--digit',
+          '#' + params.get('digit')
+        );
+
+      const time1 = document.getElementById('time-1');
+      const time2 = document.getElementById('time-2');
+      const time3 = document.getElementById('time-3');
+
+      const timeCache = [0, 3, 0, 0, 0, 0];
+
+      /**
+       * @param {HTMLElement} element
+       * @param {number} digit
+       * @param {number} id
+       */
+      function showDigit(element, digit, id) {
+        if (timeCache[id] === digit) return;
+        if (digit == 0) {
+          // 23:59:59 -> 00:00:00
+          if (id == 1 && timeCache[1] == 3) {
+            element.children[element.children.length - 2].scrollIntoView({
+              behavior: 'instant',
+            });
+          }
+          element.children[element.children.length - 1].scrollIntoView();
+          setTimeout(() => {
+            element.children[0].scrollIntoView({ behavior: 'instant' });
+          }, 500);
+        } else element.children[digit].scrollIntoView();
+        timeCache[id] = digit;
+      }
+
+      const timeCache2 = [0, 0, 0];
+
+      function updateTime() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        if (
+          timeCache2[0] === hours &&
+          timeCache2[1] === minutes &&
+          timeCache2[2] === seconds
+        )
+          return;
+
+        setTimeout(
+          () => showDigit(time1.children[0], Math.floor(hours / 10), 0),
+          125
+        );
+        setTimeout(() => showDigit(time1.children[1], hours % 10, 1), 100);
+        setTimeout(
+          () => showDigit(time2.children[0], Math.floor(minutes / 10), 2),
+          75
+        );
+        setTimeout(() => showDigit(time2.children[1], minutes % 10, 3), 50);
+        setTimeout(
+          () => showDigit(time3.children[0], Math.floor(seconds / 10), 4),
+          25
+        );
+        showDigit(time3.children[1], seconds % 10, 5);
+
+        timeCache2[0] = hours;
+        timeCache2[1] = minutes;
+        timeCache2[2] = seconds;
+      }
+
+      setInterval(updateTime, 1);
+      updateTime();
+    </script>
+  </body>
+</html>
